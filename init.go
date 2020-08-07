@@ -52,7 +52,7 @@ func reregister(name string) {
 		if s == name {
 			err := p.DoReregister()
 			if err != nil {
-				logger.E("xesMicroPlugin", "reregister %s,error:%v", name, err)
+				logger.E("odinPlugin", "reregister %s,error:%v", name, err)
 			}
 		}
 	}

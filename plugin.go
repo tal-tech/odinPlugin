@@ -6,7 +6,6 @@ import (
 	"github.com/tal-tech/odinPlugin/context"
 	"github.com/tal-tech/odinPlugin/costwarn"
 	"github.com/tal-tech/odinPlugin/cpuidle"
-	"github.com/tal-tech/odinPlugin/metrics"
 	"github.com/tal-tech/odinPlugin/ratelimit"
 	"github.com/tal-tech/odinPlugin/recovery"
 	"github.com/tal-tech/odinPlugin/traceing"
@@ -38,13 +37,6 @@ func CircuitBreakerOption() Options {
 		circu := circuitbreaker.InitCircuitBreaker(conf)
 		return circu, circu.WrapCall
 
-	}
-}
-
-func MetricsOption() Options {
-	return func(conf config.PluginConfig) (MiddleWare, wrap.EndPoint) {
-		metric := metrics.InitMetrics(conf)
-		return metric, metric.WrapCall
 	}
 }
 
