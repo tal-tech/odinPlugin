@@ -6,10 +6,10 @@ import (
 	"sync"
 	"time"
 
+	"github.com/shirou/gopsutil/cpu"
 	"github.com/spf13/cast"
 	"github.com/tal-tech/odinPlugin/config"
 	"github.com/tal-tech/odinPlugin/wrap"
-	"github.com/toolkits/nux"
 )
 
 const historyCount int = 2
@@ -21,7 +21,7 @@ type CpuIdlePlugin struct {
 	interval        int
 	weight          int
 	idle            float64
-	procStatHistory [historyCount]*nux.ProcStat
+	procStatHistory [historyCount]*cpu.TimesStat
 	stopchan        chan struct{}
 	closed          bool
 	chanuse         bool
@@ -70,8 +70,8 @@ func (this *CpuIdlePlugin) updateCpuStat(refreshTime int64) {
 	for {
 		select {
 		case <-t.C:
-			ps, err := nux.CurrentProcStat()
-			if err != nil {
+			cpu_total, err := cpu.Times(false)
+			if err != nil || len(cpu_total) == 0 {
 				continue
 			}
 
@@ -79,13 +79,12 @@ func (this *CpuIdlePlugin) updateCpuStat(refreshTime int64) {
 			for i := historyCount - 1; i > 0; i-- {
 				this.procStatHistory[i] = this.procStatHistory[i-1]
 			}
-
-			this.procStatHistory[0] = ps
+			this.procStatHistory[0] = &cpu_total[0]
 			if this.procStatHistory[1] != nil {
-				dt := this.procStatHistory[0].Cpu.Total - this.procStatHistory[1].Cpu.Total
+				dt := this.procStatHistory[0].Total() - this.procStatHistory[1].Total()
 				if dt != 0 {
 					invQuotient := 100.00 / float64(dt)
-					this.idle = float64(this.procStatHistory[0].Cpu.Idle-this.procStatHistory[1].Cpu.Idle) * invQuotient
+					this.idle = float64(this.procStatHistory[0].Idle-this.procStatHistory[1].Idle) * invQuotient
 					this.weight = cast.ToInt(this.idle - this.lowthreshold)
 				}
 			}
